@@ -59,13 +59,14 @@ userSchema.method.isPasswordCorrect = async function (password) {
 
 userSchema.method.generateAccessToken = function () {
     return jwt.sign({
-        _id: this.id,
+        _id: this._id,
         username:this.userSchema
     },process.env.JWT_KEY,{expiresIn:process.env.TOKEN_EXPIRY})
 }
+
 userSchema.method.generateRefreshToken = function () {
     return jwt.sign({
-        _id: this.id,
+        _id: this._id,
     },process.env.REFRESH_TOKEN_KEY,{expiresIn:process.env.REFRESH_TOKEN_EXPIRY})
 }
 module.exports = mongoose.model("User", userSchema);
