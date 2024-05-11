@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema({
     username: {
-        typr: String,
+        type: String,
         required: true,
         unique: true,
         trim: true,
@@ -12,18 +12,18 @@ const userSchema = new mongoose.Schema({
         lowercase: true
     },
     email: {
-        typr: String,
+        type: String,
         required: true,
         trim: true,
         unique: true,
         lowercase: true
     },
     fullname: {
-        typr: String,
+        type: String,
         required: true,
         trim: true,
         lowercase: true,
-        index: true,
+        index: true
     },
     avtar: {
         type: String,
@@ -48,9 +48,22 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 userSchema.pre("save", async (next) => {
-    if (!this.isModified("password")) return next();
-
-    this.password = bcrypt.hash(this.password, 10);
+    console.log(this.password)
+    // if (!this.isModified("password")) return next();
+    bcrypt.genSalt(10, async(err,salt)=>{
+        if(err){
+            console.log("Error in generaging salt",err);
+        }else{
+             bcrypt.hash(this.password, salt,function(err,hash){
+                if(err){
+                    console.log("Error in hashing password",err)
+                }else{
+                    console.log("Hashed password",hash)
+                    next();
+                }
+            });
+        }
+    })
 });
 
 userSchema.method.isPasswordCorrect = async function (password) {

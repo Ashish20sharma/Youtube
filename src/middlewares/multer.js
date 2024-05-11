@@ -4,7 +4,7 @@ const path=require("path");
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, './public/temp')
+      cb(null, '../public/temp')
     },
     filename: function (req, file, cb) {
       const uniqueName = uuidv4();
@@ -13,4 +13,4 @@ const storage = multer.diskStorage({
   })
   
   const upload = multer({ storage: storage })
-  modul.exports=upload;
+  module.exports=upload;
