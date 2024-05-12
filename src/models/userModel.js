@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
+        unique:true, 
         index: true,
         lowercase: true
     },
@@ -47,27 +47,20 @@ const userSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-userSchema.pre("save", async (next) => {
-    console.log(this.password)
-    // if (!this.isModified("password")) return next();
-    bcrypt.genSalt(10, async(err,salt)=>{
-        if(err){
-            console.log("Error in generaging salt",err);
-        }else{
-             bcrypt.hash(this.password, salt,function(err,hash){
-                if(err){
-                    console.log("Error in hashing password",err)
-                }else{
-                    console.log("Hashed password",hash)
-                    next();
-                }
-            });
-        }
-    })
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    try {
+        const saltRounds = 10;
+        this.password= await bcrypt.hash(this.password, saltRounds)
+        next();
+    } catch (error) {
+        console.log("Errror in hashing",error);
+    }
+             
 });
 
-userSchema.method.isPasswordCorrect = async function (password) {
-    return bcrypt.compare(password, this.password);
+userSchema.method.isPasswordCorrect = async function (Cpassword) {
+    return bcrypt.compare(Cpassword, this.password);
 }
 
 userSchema.method.generateAccessToken = function () {
