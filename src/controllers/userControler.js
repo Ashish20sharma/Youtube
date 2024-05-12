@@ -80,7 +80,25 @@ const login =asynchandler(async(req,res)=>{
     .cookie("refreshToken",refreshToken,options)
     .json({user:loggedInUser,refreshToken,accessToken,message:"User logged In successfully"});
 
+});
 
-})
+const logout=asynchandler(async (req,res)=>{
+   await userModel.findOneAndUpdate(req.user._id,
+        {$set:{refreshtoken:undefined}},
+        {new:true}
+    );
 
-module.exports = {register,login};
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+
+    res.status(200)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",options)
+    .json({message:"User logout successfully."});
+});
+
+
+
+module.exports = {register,login,logout};
