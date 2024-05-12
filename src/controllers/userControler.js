@@ -70,7 +70,7 @@ const login =asynchandler(async(req,res)=>{
 
     const {accessToken,refreshToken}=await generateAccessAndRefereshTokens(user._id);
 
-    const loggedInUser=await userModel.findById(user._id).select("-password -refreshtoken");
+    const loggedInUser=await userModel.findById(user._id).select("-password -refresh");
     const options={
         httpOnly:true,
         secure:true
