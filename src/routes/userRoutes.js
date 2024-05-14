@@ -9,5 +9,5 @@ router.route("/register").post(uploads.fields(
     { name: "coverimage", maxCount: 1 }]), userControler.register);
 router.route("/login").post(userControler.login);
 router.route("/logout").post(authmiddleware,userControler.logout);
-
+router.route("/refresh-token").post(userControler.refreshAccessToken);
 module.exports = router;

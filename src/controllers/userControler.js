@@ -1,7 +1,7 @@
 const asynchandler = require('express-async-handler');
 const userModel = require("../models/userModel");
 const cloudinary = require("../utils/cloudinary");
-const jwt=require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
@@ -100,36 +100,36 @@ const logout = asynchandler(async (req, res) => {
         .json({ message: "User logout successfully." });
 });
 
-const refreshAccessToken=asynchandler(async function(req,res){
+const refreshAccessToken = asynchandler(async function (req, res) {
     try {
-        const incomingrefreshToken=req.cookies.refreshToken || req.body.refreshToken;
-    
-        if(!incomingrefreshToken){
-            res.status(400).json({message:"Unauthorized request"});
+        const incomingrefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+        if (!incomingrefreshToken) {
+            res.status(400).json({ message: "Unauthorized request" });
         }
-    
-        const decoded=jwt.verify(incomingrefreshToken,process.env.REFRESH_TOKEN_KEY);
-        const user=userModel.findById(decoded._id);
-        if(!user){
-            res.status(400).json({message:"Invallid refresh token"});
+
+        const decoded = jwt.verify(incomingrefreshToken, process.env.REFRESH_TOKEN_KEY);
+        const user = userModel.findById(decoded._id);
+        if (!user) {
+            res.status(400).json({ message: "Invallid refresh token" });
         }
-    
-        if(incomingrefreshToken!==user?.refreshtoken){
-            res.status(400).json({message:"refresh token is invalid"});
+
+        if (incomingrefreshToken !== user?.refreshtoken) {
+            res.status(400).json({ message: "refresh token is invalid" });
         }
-        const options={
-            httpOnly:true,
-            secure:true
+        const options = {
+            httpOnly: true,
+            secure: true
         }
-        const {accessToken,refreshToken}=await generateAccessAndRefereshTokens(usre._id);
+        const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(usre._id);
         res.status(200)
-        .cookie("accessToken",accessToken,options)
-        .cookie("refreshToken",refreshToken,options)
-        .json({message:"Access token refreshed"});
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json({ message: "Access token refreshed" });
     } catch (error) {
-        res.status(400).json({message:error.message});
+        res.status(400).json({ message: error.message });
     }
 
 })
 
-module.exports = { register, login, logout };
+module.exports = { register, login, logout, refreshAccessToken };
