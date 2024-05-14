@@ -127,9 +127,30 @@ const refreshAccessToken = asynchandler(async function (req, res) {
             .cookie("refreshToken", refreshToken, options)
             .json({ message: "Access token refreshed" });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({message: "Error in accessRefresh token" });
     }
-
 })
 
-module.exports = { register, login, logout, refreshAccessToken };
+const updatePassword=asynchandler(async (req,res)=>{
+    const {oldPassword,newPassword}=req.body;
+
+    if(!oldPassword || !newPassword){
+        res.status(400).json({message:"Please provide old password and new password"});
+    }
+
+    const user=await userModel.findById(req.user._id);
+    if(!user){
+        res.status(400).json({message:"User not found"});
+    }
+
+   const isPasswordCorrect= await user.isPasswordCorrect(oldPassword);
+   if(!isPasswordCorrect){
+    res.status(400).json({message:"Please provide correct old password"});
+   }
+
+   user.password=newPassword;
+   await user.save({velidateBeforeSave:false});
+   res.status(200).json({message:"Password changed successfully."});
+})
+
+module.exports = { register, login, logout, refreshAccessToken, updatePassword};

@@ -10,4 +10,5 @@ router.route("/register").post(uploads.fields(
 router.route("/login").post(userControler.login);
 router.route("/logout").post(authmiddleware,userControler.logout);
 router.route("/refresh-token").post(userControler.refreshAccessToken);
+router.route("/update-Password").post(authmiddleware,userControler.updatePassword);
 module.exports = router;
