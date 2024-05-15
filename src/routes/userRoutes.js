@@ -11,4 +11,7 @@ router.route("/login").post(userControler.login);
 router.route("/logout").post(authmiddleware,userControler.logout);
 router.route("/refresh-token").post(userControler.refreshAccessToken);
 router.route("/update-Password").post(authmiddleware,userControler.updatePassword);
+router.route("/update-details").post(authmiddleware,userControler.updateDetails);
+router.route("/get-currentUser").get(authmiddleware,userControler.getCurrentUser);
+
 module.exports = router;

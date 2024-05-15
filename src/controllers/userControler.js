@@ -55,7 +55,7 @@ const register = asynchandler(async (req, res) => {
 const login = asynchandler(async (req, res) => {
     const { username, email, password } = req.body;
 
-    if (!email && !username) {
+    if (!(email || username)) {
         res.status(201).json({ message: "Please provide username and email" });
     }
 
@@ -127,30 +127,108 @@ const refreshAccessToken = asynchandler(async function (req, res) {
             .cookie("refreshToken", refreshToken, options)
             .json({ message: "Access token refreshed" });
     } catch (error) {
-        res.status(400).json({message: "Error in accessRefresh token" });
+        res.status(400).json({ message: "Error in accessRefresh token" });
     }
 })
 
-const updatePassword=asynchandler(async (req,res)=>{
-    const {oldPassword,newPassword}=req.body;
+const updatePassword = asynchandler(async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
 
-    if(!oldPassword || !newPassword){
-        res.status(400).json({message:"Please provide old password and new password"});
+    if (!(oldPassword || newPassword)) {
+        res.status(400).json({ message: "Please provide old password and new password" });
     }
 
-    const user=await userModel.findById(req.user._id);
-    if(!user){
-        res.status(400).json({message:"User not found"});
+    const user = await userModel.findById(req.user._id);
+    if (!user) {
+        res.status(400).json({ message: "User not found" });
     }
 
-   const isPasswordCorrect= await user.isPasswordCorrect(oldPassword);
-   if(!isPasswordCorrect){
-    res.status(400).json({message:"Please provide correct old password"});
-   }
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+    if (!isPasswordCorrect) {
+        res.status(400).json({ message: "Please provide correct old password" });
+    }
 
-   user.password=newPassword;
-   await user.save({velidateBeforeSave:false});
-   res.status(200).json({message:"Password changed successfully."});
+    user.password = newPassword;
+    await user.save({ velidateBeforeSave: false });
+    res.status(200).json({ message: "Password changed successfully." });
 })
 
-module.exports = { register, login, logout, refreshAccessToken, updatePassword};
+const getCurrentUser = asynchandler(async (req, res) => {
+    return res.status(200).json({ user: req.user, message: "Current user successfully get." })
+})
+
+const updateDetails = asynchandler(async (req, res) => {
+    const { email, username, fullname } = req.body;
+
+    if (!email || !fullname || !username) {
+        res.status(400).json({ message: "All field are required." });
+    }
+    const user = await userModel.findOneAndUpdate(req.user._id,
+        {
+            $set: {
+                email,
+                username,
+                fullname
+            }
+        },
+        { new: true }
+    );
+
+    if (!user) {
+        res.status(400).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ user,message: "Details update successfully." })
+})
+
+const updateAvtar = asynchandler(async (req, res) => {
+    const avtarLocalPath = req.file.path;
+
+    if (!avtarLocalPath) {
+        res.status(400).json({ message: "Please provide Avtar for update." });
+    }
+
+    const avtar=await uploadOnCloudinary(avtarLocalPath);
+    if(!avtar.url){
+        res.status(400).json({message:"Error while uploading avatar."})
+    }
+
+    await userModel.findByIdAndUpdate(req.user._id,
+        {
+            $set:{
+                avtar:avtar.url
+            }
+        },
+        {new:true}
+    );
+
+    res.status(200).json({user,message:"Avtar update successfully."})
+
+})
+
+const updateCoverImage = asynchandler(async (req, res) => {
+    const coverImageLocalPath = req.file.path;
+
+    if (!coverImageLocalPath) {
+        res.status(400).json({ message: "Please provide Avtar for update." });
+    }
+
+    const coverImage=await uploadOnCloudinary(coverImageLocalPath);
+    if(!coverImage.url){
+        res.status(400).json({message:"Error while uploading Coverimage."})
+    }
+
+   const user= await userModel.findByIdAndUpdate(req.user._id,
+        {
+            $set:{
+                coverimage:coverImage.url
+            }
+        },
+        {new:true}
+    );
+
+    res.status(200).json({user,message:"Coverimage update successfully."})
+
+})
+
+module.exports = { register, login, logout, refreshAccessToken, updatePassword, updateDetails, getCurrentUser,updateAvtar,updateCoverImage };
