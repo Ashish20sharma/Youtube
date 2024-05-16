@@ -178,7 +178,7 @@ const updateDetails = asynchandler(async (req, res) => {
         res.status(400).json({ message: "User not found" });
     }
 
-    res.status(200).json({ user,message: "Details update successfully." })
+    res.status(200).json({ user, message: "Details update successfully." })
 })
 
 const updateAvtar = asynchandler(async (req, res) => {
@@ -188,21 +188,21 @@ const updateAvtar = asynchandler(async (req, res) => {
         res.status(400).json({ message: "Please provide Avtar for update." });
     }
 
-    const avtar=await uploadOnCloudinary(avtarLocalPath);
-    if(!avtar.url){
-        res.status(400).json({message:"Error while uploading avatar."})
+    const avtar = await uploadOnCloudinary(avtarLocalPath);
+    if (!avtar.url) {
+        res.status(400).json({ message: "Error while uploading avatar." })
     }
 
     await userModel.findByIdAndUpdate(req.user._id,
         {
-            $set:{
-                avtar:avtar.url
+            $set: {
+                avtar: avtar.url
             }
         },
-        {new:true}
+        { new: true }
     );
 
-    res.status(200).json({user,message:"Avtar update successfully."})
+    res.status(200).json({ user, message: "Avtar update successfully." })
 
 })
 
@@ -213,22 +213,89 @@ const updateCoverImage = asynchandler(async (req, res) => {
         res.status(400).json({ message: "Please provide Avtar for update." });
     }
 
-    const coverImage=await uploadOnCloudinary(coverImageLocalPath);
-    if(!coverImage.url){
-        res.status(400).json({message:"Error while uploading Coverimage."})
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    if (!coverImage.url) {
+        res.status(400).json({ message: "Error while uploading Coverimage." })
     }
 
-   const user= await userModel.findByIdAndUpdate(req.user._id,
+    const user = await userModel.findByIdAndUpdate(req.user._id,
         {
-            $set:{
-                coverimage:coverImage.url
+            $set: {
+                coverimage: coverImage.url
             }
         },
-        {new:true}
+        { new: true }
     );
 
-    res.status(200).json({user,message:"Coverimage update successfully."})
+    res.status(200).json({ user, message: "Coverimage update successfully." })
 
 })
 
-module.exports = { register, login, logout, refreshAccessToken, updatePassword, updateDetails, getCurrentUser,updateAvtar,updateCoverImage };
+const getUserChannelProfile = asynchandler(async (req, res) => {
+    const { username } = req.params;
+
+    if (!username.trim()) {
+        res.status(400).json({ message: "Username is missing." });
+    }
+
+    const channel=userModel.aggregate([
+        {
+            $match: {
+                username: username?.toLocaleLowerCase()
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "chennel",
+                as: "subscribers"
+            }
+        },
+        {
+            $lookup: {
+                from: "subscriptions",
+                localField: "_id",
+                foreignField: "subscriber",
+                as: "subscribedTo"
+            }
+        },
+        {
+            $addFields: {
+                subscribersCount: {
+                    $size: "$subscribers"
+                },
+                channelSubscribedToCount: {
+                    $size: "$subscribedTo"
+                },
+                isSubscribed: {
+                    $cond: {
+                        if: { $in: [req.user?._id, "$subscribers.subsriber"] },
+                        then: true,
+                        else: false
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                username: 1,
+                email: 1,
+                fullname:1,
+                subscribersCount:1,
+                channelSubscribedToCount:1,
+                isSubscribed:1,
+                avtar:1,
+                coverimage:1
+            }
+        }
+    ]);
+
+    if(!channel?.length){
+        res.status(400).json({message:"channel does not exists."})
+    }
+
+    res.status(200).json({channel:channel[0],message:"User channel fetched successfully."})
+})
+
+module.exports = { register, login, logout, refreshAccessToken, updatePassword, updateDetails, getCurrentUser, updateAvtar, updateCoverImage, getUserChannelProfile };

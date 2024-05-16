@@ -11,4 +11,4 @@ const subscriptionSchema=new mongoose.Schema({
     }
 },{timeseries:true});
 
-module.exports=subscriptionSchema;
+module.exports=mongoose.model("Subscription",subscriptionSchema);
